@@ -1,7 +1,6 @@
 package org.elasticsearch.repositories.webdav;
 
 import com.github.sardine.Sardine;
-import com.github.sardine.SardineFactory;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.blobstore.BlobPath;
 import org.elasticsearch.common.blobstore.BlobStore;
@@ -14,6 +13,7 @@ import org.elasticsearch.repositories.RepositorySettings;
 import org.elasticsearch.repositories.blobstore.BlobStoreRepository;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.webdav.WebdavBlobStore;
+import org.elasticsearch.webdav.WebdavService;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -36,7 +36,7 @@ public class WebdavRepository extends BlobStoreRepository {
      * @param indexShardRepository an instance of IndexShardRepository
      */
     @Inject
-    protected WebdavRepository(String name, RepositorySettings repositorySettings, IndexShardRepository indexShardRepository, ThreadPool threadPool) throws MalformedURLException {
+    protected WebdavRepository(String name, RepositorySettings repositorySettings, IndexShardRepository indexShardRepository, ThreadPool threadPool, WebdavService webdavService) throws MalformedURLException {
         super(name, repositorySettings, indexShardRepository);
 
         boolean https = repositorySettings.settings().getAsBoolean("https", componentSettings.getAsBoolean("https", false));
@@ -72,9 +72,9 @@ public class WebdavRepository extends BlobStoreRepository {
 
         Sardine sardine;
         if(username != null && !username.isEmpty()){
-            sardine = SardineFactory.begin(username, password);
+            sardine = webdavService.client(username, password);
         }else {
-            sardine = SardineFactory.begin();
+            sardine = webdavService.client();
         }
 
         blobStore = new WebdavBlobStore(settings, threadPool, sardine, path);
