@@ -3,6 +3,7 @@ package org.elasticsearch.webdav;
 import com.github.sardine.DavAce;
 import com.github.sardine.Sardine;
 import org.elasticsearch.common.settings.ImmutableSettings;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -21,6 +22,12 @@ public class TestWebdavServiceTest {
     @Before
     public void setUp() throws Exception {
         service = new TestWebdavService(ImmutableSettings.EMPTY);
+        service.doStart();
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        service.doClose();
     }
 
     @Test

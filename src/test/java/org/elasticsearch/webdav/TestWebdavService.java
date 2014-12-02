@@ -16,14 +16,18 @@ import java.util.*;
 
 public class TestWebdavService extends AbstractLifecycleComponent<WebdavService> implements WebdavService {
 
+    private static volatile Sardine sardine;
+
     @Inject
     protected TestWebdavService(Settings settings) {
         super(settings);
     }
 
     @Override
-    protected void doStart() throws ElasticsearchException {
-
+    protected synchronized void doStart() throws ElasticsearchException {
+        if (sardine == null) {
+            sardine = new SardineImpl();
+        }
     }
 
     @Override
@@ -32,18 +36,21 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
     }
 
     @Override
-    protected void doClose() throws ElasticsearchException {
-
+    protected synchronized void doClose() throws ElasticsearchException {
+        sardine = null;
     }
 
     @Override
-    public Sardine client() {
-        return new SardineImpl();
+    public synchronized Sardine client() {
+        if (sardine == null) {
+            sardine = new SardineImpl();
+        }
+        return sardine;
     }
 
     @Override
     public Sardine client(String username, String password) {
-        return new SardineImpl();
+        return client();
     }
 
     private static class SardineImpl implements Sardine {
