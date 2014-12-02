@@ -50,11 +50,11 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
 
         private final DavEntry rootEntry = new DavEntry();
 
-        public void setCredentials(String var1, String var2) {
+        public void setCredentials(String username, String password) {
             throw new NotImplementedException();
         }
 
-        public void setCredentials(String var1, String var2, String var3, String var4) {
+        public void setCredentials(String username, String password, String domain, String workstation) {
             throw new NotImplementedException();
         }
 
@@ -62,21 +62,24 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
          * @deprecated
          */
         @Deprecated
-        public List<DavResource> getResources(String var1) throws IOException {
+        public List<DavResource> getResources(String url) throws IOException {
             throw new NotImplementedException();
         }
 
-        public List<DavResource> list(String var1) throws IOException {
-            DavEntry davEntry = getEntry(var1);
+        public List<DavResource> list(String url) throws IOException {
+            DavEntry davEntry = getEntry(url);
             if (davEntry == null) {
                 return Collections.emptyList();
+            }
+            if (!url.endsWith("/")) {
+                url = url + "/";
             }
             List<DavResource> resources = new ArrayList<>();
             for (Map.Entry<String, DavEntry> resourceEntry : davEntry.children.entrySet()) {
                 Response response = new Response();
-                response.getHref().add(var1 + '/' + resourceEntry.getKey());
+                response.getHref().add(url + resourceEntry.getKey());
                 try {
-                    DavResource resource = new DavResource(response);
+                    DavResource resource = new InternalDavResource(response);
                     resources.add(resource);
                 } catch (URISyntaxException e) {
                     throw new IOException(e);
@@ -85,41 +88,36 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
             return resources;
         }
 
-        public List<DavResource> list(String var1, int var2) throws IOException {
+        public List<DavResource> list(String url, int depth) throws IOException {
             throw new NotImplementedException();
         }
 
-        public List<DavResource> list(String var1, int var2, Set<QName> var3) throws IOException {
+        public List<DavResource> list(String url, int depth, Set<QName> props) throws IOException {
             throw new NotImplementedException();
         }
 
-        public List<DavResource> list(String var1, int var2, boolean var3) throws IOException {
+        public List<DavResource> list(String url, int depth, boolean allProp) throws IOException {
             throw new NotImplementedException();
         }
 
-        @Override
-        public List<DavResource> search(String s, String s1, String s2) throws IOException {
-            return null;
-        }
-
-        /**
-         * @deprecated
-         */
-        @Deprecated
-        public void setCustomProps(String var1, Map<String, String> var2, List<String> var3) throws IOException {
+        public List<DavResource> search(String url, String language, String query) throws IOException {
             throw new NotImplementedException();
         }
 
-        public List<DavResource> patch(String var1, Map<QName, String> var2) throws IOException {
+        public void setCustomProps(String url, Map<String, String> addProps, List<String> removeProps) throws IOException {
             throw new NotImplementedException();
         }
 
-        public List<DavResource> patch(String var1, Map<QName, String> var2, List<QName> var3) throws IOException {
+        public List<DavResource> patch(String url, Map<QName, String> addProps) throws IOException {
             throw new NotImplementedException();
         }
 
-        public InputStream get(String var1) throws IOException {
-            DavEntry davEntry = getEntry(var1);
+        public List<DavResource> patch(String url, Map<QName, String> addProps, List<QName> removeProps) throws IOException {
+            throw new NotImplementedException();
+        }
+
+        public InputStream get(String url) throws IOException {
+            DavEntry davEntry = getEntry(url);
             if (davEntry == null) {
                 throw new IOException("not found");
             }
@@ -130,16 +128,12 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
             return new ByteArrayInputStream(buf);
         }
 
-        public InputStream get(String var1, Map<String, String> var2) throws IOException {
+        public InputStream get(String url, Map<String, String> headers) throws IOException {
             throw new NotImplementedException();
         }
 
-        public void put(String var1, byte[] var2) throws IOException {
-            throw new NotImplementedException();
-        }
-
-        public void put(String var1, InputStream var2) throws IOException {
-            URL url = new URL(var1);
+        public void put(String uri, byte[] data) throws IOException {
+            URL url = new URL(uri);
             String server = url.getHost() + ":" + url.getPort();
             DavEntry entry = rootEntry.children.get(server);
             if (entry == null) {
@@ -148,6 +142,33 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
             }
             String[] paths = url.getPath().split("/");
             for (String path : paths) {
+                if (path.equals("")) {
+                    continue;
+                }
+                DavEntry entryPrev = entry;
+                entry = entry.children.get(path);
+                if (entry == null) {
+                    entry = new DavEntry();
+                    entryPrev.children.put(path, entry);
+                }
+            }
+            entry.outputStream = new ByteArrayOutputStream();
+            entry.outputStream.write(data);
+        }
+
+        public void put(String uri, InputStream dataStream) throws IOException {
+            URL url = new URL(uri);
+            String server = url.getHost() + ":" + url.getPort();
+            DavEntry entry = rootEntry.children.get(server);
+            if (entry == null) {
+                entry = new DavEntry();
+                rootEntry.children.put(server, entry);
+            }
+            String[] paths = url.getPath().split("/");
+            for (String path : paths) {
+                if (path.equals("")) {
+                    continue;
+                }
                 DavEntry entryPrev = entry;
                 entry = entry.children.get(path);
                 if (entry == null) {
@@ -159,7 +180,7 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             int read;
             do {
-                read = var2.read(buffer);
+                read = dataStream.read(buffer);
                 if (read > 0) {
                     outputStream.write(buffer, 0, read);
                 } else {
@@ -169,38 +190,40 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
             entry.outputStream = outputStream;
         }
 
-        public void put(String var1, byte[] var2, String var3) throws IOException {
+        public void put(String url, byte[] data, String contentType) throws IOException {
             throw new NotImplementedException();
         }
 
-        public void put(String var1, InputStream var2, String var3) throws IOException {
+        public void put(String url, InputStream dataStream, String contentType) throws IOException {
             throw new NotImplementedException();
         }
 
-        public void put(String var1, InputStream var2, String var3, boolean var4) throws IOException {
+        public void put(String url, InputStream dataStream, String contentType, boolean expectContinue) throws IOException {
             throw new NotImplementedException();
         }
 
-        public void put(String var1, InputStream var2, String var3, boolean var4, long var5) throws IOException {
+        public void put(String url, InputStream dataStream, String contentType, boolean expectContinue, long contentLength) throws IOException {
             throw new NotImplementedException();
         }
 
-        public void put(String var1, InputStream var2, Map<String, String> var3) throws IOException {
+        public void put(String url, InputStream dataStream, Map<String, String> headers) throws IOException {
             throw new NotImplementedException();
         }
 
-        @Override
-        public void put(String s, File file, String s1) throws IOException {
-
+        public void put(String url, File localFile, String contentType) throws IOException {
+            throw new NotImplementedException();
         }
 
-        public void delete(String var1) throws IOException {
-            URL url = new URL(var1);
+        public void delete(String uri) throws IOException {
+            URL url = new URL(uri);
             DavEntry entry = rootEntry.children.get(url.getHost() + ":" + url.getPort());
             DavEntry entryPrev = null;
             if (entry != null) {
                 String[] paths = url.getPath().split("/");
                 for (String path : paths) {
+                    if (path.equals("")) {
+                        continue;
+                    }
                     entryPrev = entry;
                     entry = entry.children.get(path);
                     if (entry == null) {
@@ -213,20 +236,20 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
             }
         }
 
-        public void createDirectory(String var1) throws IOException {
+        public void createDirectory(String url) throws IOException {
             throw new NotImplementedException();
         }
 
-        public void move(String var1, String var2) throws IOException {
+        public void move(String sourceUrl, String destinationUrl) throws IOException {
             throw new NotImplementedException();
         }
 
-        public void copy(String var1, String var2) throws IOException {
+        public void copy(String sourceUrl, String destinationUrl) throws IOException {
             throw new NotImplementedException();
         }
 
-        public boolean exists(String var1) throws IOException {
-            return getEntry(var1) != null;
+        public boolean exists(String url) throws IOException {
+            return getEntry(url) != null;
         }
 
         private DavEntry getEntry(String uri) throws IOException {
@@ -235,6 +258,9 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
             if (entry != null) {
                 String[] paths = url.getPath().split("/");
                 for (String path : paths) {
+                    if (path.equals("")) {
+                        continue;
+                    }
                     entry = entry.children.get(path);
                     if (entry == null) {
                         break;
@@ -244,35 +270,35 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
             return entry;
         }
 
-        public String lock(String var1) throws IOException {
+        public String lock(String url) throws IOException {
             throw new NotImplementedException();
         }
 
-        public String refreshLock(String var1, String var2, String var3) throws IOException {
+        public String refreshLock(String url, String token, String file) throws IOException {
             throw new NotImplementedException();
         }
 
-        public void unlock(String var1, String var2) throws IOException {
+        public void unlock(String url, String token) throws IOException {
             throw new NotImplementedException();
         }
 
-        public DavAcl getAcl(String var1) throws IOException {
+        public DavAcl getAcl(String url) throws IOException {
             throw new NotImplementedException();
         }
 
-        public DavQuota getQuota(String var1) throws IOException {
+        public DavQuota getQuota(String url) throws IOException {
             throw new NotImplementedException();
         }
 
-        public void setAcl(String var1, List<DavAce> var2) throws IOException {
+        public void setAcl(String url, List<DavAce> aces) throws IOException {
             throw new NotImplementedException();
         }
 
-        public List<DavPrincipal> getPrincipals(String var1) throws IOException {
+        public List<DavPrincipal> getPrincipals(String url) throws IOException {
             throw new NotImplementedException();
         }
 
-        public List<String> getPrincipalCollectionSet(String var1) throws IOException {
+        public List<String> getPrincipalCollectionSet(String url) throws IOException {
             throw new NotImplementedException();
         }
 
@@ -284,15 +310,15 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
             throw new NotImplementedException();
         }
 
-        public void enablePreemptiveAuthentication(String var1) {
+        public void enablePreemptiveAuthentication(String hostname) {
             throw new NotImplementedException();
         }
 
-        public void enablePreemptiveAuthentication(URL var1) {
+        public void enablePreemptiveAuthentication(URL url) {
             throw new NotImplementedException();
         }
 
-        public void enablePreemptiveAuthentication(String var1, int var2, int var3) {
+        public void enablePreemptiveAuthentication(String hostname, int httpPort, int httpsPort) {
             throw new NotImplementedException();
         }
 
@@ -307,6 +333,46 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
         private static class DavEntry {
             private final Map<String, DavEntry> children = new HashMap<>();
             private ByteArrayOutputStream outputStream = null;
+        }
+    }
+
+    static class InternalDavResource extends DavResource {
+
+        private Response response;
+
+        public InternalDavResource(Response response) throws URISyntaxException {
+            super(response);
+            this.response = response;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            InternalDavResource that = (InternalDavResource) o;
+
+            if (response != null) {
+                if (response.getHref() != null ? !response.getHref().equals(that.response.getHref()) : that.response.getHref() != null)
+                    return false;
+                if (response.getError() != null ? !response.getError().equals(that.response.getError()) : that.response.getError() != null)
+                    return false;
+                if (response.getPropstat() != null ? !response.getPropstat().equals(that.response.getPropstat()) : that.response.getPropstat() != null)
+                    return false;
+                if (response.getResponsedescription() != null ? !response.getResponsedescription().equals(that.response.getResponsedescription()) : that.response.getResponsedescription() != null)
+                    return false;
+                if (response.getStatus() != null ? !response.getStatus().equals(that.response.getStatus()) : that.response.getStatus() != null)
+                    return false;
+            } else {
+                return that.response == null;
+            }
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return response != null ? response.hashCode() : 0;
         }
     }
 }
