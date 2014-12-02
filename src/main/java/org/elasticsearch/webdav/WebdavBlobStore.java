@@ -2,10 +2,10 @@ package org.elasticsearch.webdav;
 
 import com.github.sardine.Sardine;
 import org.elasticsearch.ElasticsearchException;
+import org.elasticsearch.common.blobstore.BlobContainer;
 import org.elasticsearch.common.blobstore.BlobPath;
 import org.elasticsearch.common.blobstore.BlobStore;
 import org.elasticsearch.common.blobstore.BlobStoreException;
-import org.elasticsearch.common.blobstore.ImmutableBlobContainer;
 import org.elasticsearch.common.component.AbstractComponent;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.unit.ByteSizeUnit;
@@ -41,7 +41,7 @@ public class WebdavBlobStore extends AbstractComponent implements BlobStore {
     }
 
     public Executor executor() {
-        return threadPool.executor(ThreadPool.Names.SNAPSHOT_DATA);
+        return threadPool.executor(ThreadPool.Names.SNAPSHOT);
     }
 
     public int bufferSizeInBytes(){
@@ -56,9 +56,10 @@ public class WebdavBlobStore extends AbstractComponent implements BlobStore {
      * {@inheritDoc}
      */
     @Override
-    public ImmutableBlobContainer immutableBlobContainer(BlobPath path) {
+    public BlobContainer blobContainer(BlobPath blobPath) {
         try {
-            return new WebdavImmutableBlobContainer(this, path, buildPath(path), sardine);
+            URL url = buildPath(blobPath);
+            return new WebdavImmutableBlobContainer(this, blobPath, url, sardine);
         } catch (MalformedURLException ex) {
             throw new BlobStoreException("malformed URL " + path, ex);
         }

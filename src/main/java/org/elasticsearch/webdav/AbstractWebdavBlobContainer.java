@@ -2,7 +2,6 @@ package org.elasticsearch.webdav;
 
 import com.github.sardine.DavResource;
 import com.github.sardine.Sardine;
-import org.apache.lucene.util.IOUtils;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.blobstore.BlobMetaData;
 import org.elasticsearch.common.blobstore.BlobPath;
@@ -12,7 +11,6 @@ import org.elasticsearch.common.collect.ImmutableMap;
 import org.elasticsearch.common.collect.MapBuilder;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 
@@ -67,33 +65,5 @@ public abstract class AbstractWebdavBlobContainer extends AbstractBlobContainer 
             }
         }
         return builder.immutableMap();
-    }
-
-    @Override
-    public void readBlob(final String blobName, final ReadBlobListener listener) {
-        blobStore.executor().execute(new Runnable() {
-            @Override
-            public void run() {
-                byte[] buffer = new byte[blobStore.bufferSizeInBytes()];
-                InputStream is = null;
-                try {
-                    is = sardine.get(new URL(path, blobName).toString());
-                    int bytesRead;
-                    while ((bytesRead = is.read(buffer)) != -1) {
-                        listener.onPartial(buffer, 0, bytesRead);
-                    }
-                } catch (Throwable t) {
-                    IOUtils.closeWhileHandlingException(is);
-                    listener.onFailure(t);
-                    return;
-                }
-                try {
-                    IOUtils.closeWhileHandlingException(is);
-                    listener.onCompleted();
-                } catch (Throwable t) {
-                    listener.onFailure(t);
-                }
-            }
-        });
     }
 }
