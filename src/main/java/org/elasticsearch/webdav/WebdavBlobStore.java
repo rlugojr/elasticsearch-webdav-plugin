@@ -52,30 +52,29 @@ public class WebdavBlobStore extends AbstractComponent implements BlobStore {
         return numberOfRetries;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public BlobContainer blobContainer(BlobPath blobPath) {
         try {
             URL url = buildPath(blobPath);
-            return new WebdavImmutableBlobContainer(this, blobPath, url, sardine);
+            return new WebdavBlobContainer(this, blobPath, url, sardine);
         } catch (MalformedURLException ex) {
             throw new BlobStoreException("malformed URL " + path, ex);
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
-    public void delete(BlobPath path) {
+    public void delete(BlobPath blobPath) {
+        try {
+            URL url = buildPath(blobPath);
+            sardine.delete(url.toString());
+        } catch (MalformedURLException ex) {
+            throw new BlobStoreException("malformed URL " + path, ex);
+        } catch (IOException ex) {
+            throw new BlobStoreException("error delete " + path, ex);
+        }
         throw new UnsupportedOperationException("URL repository is read only");
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void close() {
         try {
