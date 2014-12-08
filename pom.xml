@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.elasticsearch</groupId>
     <artifactId>elasticsearch-webdav</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.4-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>Elasticsearch webdav plugin</name>
     <description>The Elasticsearch webdav plugin allows use webdav services for repositories.</description>
