@@ -6,6 +6,7 @@ import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.inject.Inject;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.webdav.sardine.SardineWebdavClient;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.xml.namespace.QName;
@@ -41,7 +42,11 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
     }
 
     @Override
-    public synchronized Sardine client() {
+    public synchronized WebdavClient client() {
+        return new SardineWebdavClient(sardine());
+    }
+
+    public synchronized Sardine sardine() {
         if (sardine == null) {
             sardine = new SardineImpl();
         }
@@ -49,7 +54,7 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
     }
 
     @Override
-    public Sardine client(String username, String password) {
+    public WebdavClient client(String username, String password) {
         return client();
     }
 

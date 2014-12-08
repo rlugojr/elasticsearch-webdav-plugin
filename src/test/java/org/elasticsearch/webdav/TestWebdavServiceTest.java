@@ -32,39 +32,40 @@ public class TestWebdavServiceTest {
 
     @Test
     public void testReturnSardine() throws Exception {
-        Sardine sardine = service.client();
-        assert sardine != null;
+        WebdavClient client = service.client();
+        assert client != null;
     }
 
     @Test
     public void testReturnSardineAuth() throws Exception {
-        Sardine sardine = service.client("foo", "foo");
-        assert sardine != null;
+        WebdavClient client = service.client("foo", "foo");
+        assert client != null;
     }
 
     @Test(expected = NotImplementedException.class)
     public void testSardineSetCredentials() throws Exception {
-        service.client().setCredentials("foo", "foo");
+        service.sardine().setCredentials("foo", "foo");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testSardineSetCredentials2() throws Exception {
-        service.client().setCredentials("foo", "foo", "foo", "foo");
+        service.sardine().setCredentials("foo", "foo", "foo", "foo");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testSardineGetResources() throws Exception {
-        service.client().getResources("foo");
+        service.sardine().getResources("foo");
     }
 
     @Test
     public void testListEmpty() throws Exception {
-        assert service.client().list("http://localhost:8080/root").isEmpty();
+        if (!service.sardine().list("http://localhost:8080/root").isEmpty())
+            throw new AssertionError();
     }
 
     @Test
     public void testList() throws Exception {
-        Sardine sardine = service.client();
+        Sardine sardine = service.sardine();
 
         assert sardine.list("http://localhost:8080").isEmpty();
         assert sardine.list("http://localhost:8080/").isEmpty();
@@ -100,7 +101,7 @@ public class TestWebdavServiceTest {
 
     @Test
     public void testListNotEmptyStream() throws Exception {
-        Sardine sardine = service.client();
+        Sardine sardine = service.sardine();
         sardine.put("http://localhost:8080/root/foo", new ByteArrayInputStream("foo".getBytes()));
         assert !sardine.list("http://localhost:8080/root").isEmpty();
         assert sardine.list("http://localhost:8080/root").size() == 1;
@@ -108,81 +109,81 @@ public class TestWebdavServiceTest {
 
     @Test(expected = NotImplementedException.class)
     public void testListError() throws Exception {
-        service.client().list("http://localhost:8080/root", 1);
+        service.sardine().list("http://localhost:8080/root", 1);
     }
 
     @Test(expected = NotImplementedException.class)
     public void testListError2() throws Exception {
-        service.client().list("http://localhost:8080/root", 1, Collections.<QName>emptySet());
+        service.sardine().list("http://localhost:8080/root", 1, Collections.<QName>emptySet());
     }
 
     @Test(expected = NotImplementedException.class)
     public void testListError3() throws Exception {
-        service.client().list("http://localhost:8080/root", 1, true);
+        service.sardine().list("http://localhost:8080/root", 1, true);
     }
 
     @Test(expected = NotImplementedException.class)
     public void testSearchError() throws Exception {
-        service.client().search("http://localhost:8080/root", "foo", "foo");
+        service.sardine().search("http://localhost:8080/root", "foo", "foo");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testSetCustomPropsError() throws Exception {
-        service.client().setCustomProps("http://localhost:8080/root", Collections.<String, String>emptyMap(), Collections.<String>emptyList());
+        service.sardine().setCustomProps("http://localhost:8080/root", Collections.<String, String>emptyMap(), Collections.<String>emptyList());
     }
 
     @Test(expected = NotImplementedException.class)
     public void testPatchError() throws Exception {
-        service.client().patch("http://localhost:8080/root", Collections.<QName, String>emptyMap());
+        service.sardine().patch("http://localhost:8080/root", Collections.<QName, String>emptyMap());
     }
 
     @Test(expected = NotImplementedException.class)
     public void testPatchError2() throws Exception {
-        service.client().patch("http://localhost:8080/root", Collections.<QName, String>emptyMap(), Collections.<QName>emptyList());
+        service.sardine().patch("http://localhost:8080/root", Collections.<QName, String>emptyMap(), Collections.<QName>emptyList());
     }
 
     @Test
     public void testGetAndPut() throws Exception {
-        Sardine sardine = service.client();
+        Sardine sardine = service.sardine();
         sardine.put("http://localhost:8080/root/foo", "foo".getBytes());
         assert null != sardine.get("http://localhost:8080/root/foo");
     }
 
     @Test
     public void testGetAndPut2() throws Exception {
-        Sardine sardine = service.client();
+        Sardine sardine = service.sardine();
         sardine.put("http://localhost:8080/root/foo", new ByteArrayInputStream("foo".getBytes()));
         assert null != sardine.get("http://localhost:8080/root/foo");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testPutError() throws Exception {
-        service.client().put("http://localhost:8080/root/foo", new ByteArrayInputStream("foo".getBytes()), "foo");
+        service.sardine().put("http://localhost:8080/root/foo", new ByteArrayInputStream("foo".getBytes()), "foo");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testPutError2() throws Exception {
-        service.client().put("http://localhost:8080/root/foo", new ByteArrayInputStream("foo".getBytes()), "foo", true);
+        service.sardine().put("http://localhost:8080/root/foo", new ByteArrayInputStream("foo".getBytes()), "foo", true);
     }
 
     @Test(expected = NotImplementedException.class)
     public void testPutError3() throws Exception {
-        service.client().put("http://localhost:8080/root/foo", new ByteArrayInputStream("foo".getBytes()), "foo", true, 3);
+        service.sardine().put("http://localhost:8080/root/foo", new ByteArrayInputStream("foo".getBytes()), "foo", true, 3);
     }
 
     @Test(expected = NotImplementedException.class)
     public void testPutError4() throws Exception {
-        service.client().put("http://localhost:8080/root/foo", new ByteArrayInputStream("foo".getBytes()), Collections.<String, String>emptyMap());
+        service.sardine().put("http://localhost:8080/root/foo", new ByteArrayInputStream("foo".getBytes()), Collections.<String, String>emptyMap());
     }
 
     @Test(expected = NotImplementedException.class)
     public void testPutError5() throws Exception {
-        service.client().put("http://localhost:8080/root/foo", File.createTempFile("foo", "foo"), "foo");
+        service.sardine().put("http://localhost:8080/root/foo", File.createTempFile("foo", "foo"), "foo");
     }
 
     @Test
     public void testDelete() throws Exception {
-        Sardine sardine = service.client();
+        Sardine sardine = service.sardine();
         sardine.put("http://localhost:8080/root/foo", "foo".getBytes());
         assert !sardine.list("http://localhost:8080/root").isEmpty();
         sardine.delete("http://localhost:8080/root/foo");
@@ -191,22 +192,22 @@ public class TestWebdavServiceTest {
 
     @Test(expected = NotImplementedException.class)
     public void testCreateDirectory() throws Exception {
-        service.client().createDirectory("http://localhost:8080/root");
+        service.sardine().createDirectory("http://localhost:8080/root");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testMove() throws Exception {
-        service.client().move("http://localhost:8080/root", "http://localhost:8080/root/321");
+        service.sardine().move("http://localhost:8080/root", "http://localhost:8080/root/321");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testCopy() throws Exception {
-        service.client().copy("http://localhost:8080/root", "http://localhost:8080/root/321");
+        service.sardine().copy("http://localhost:8080/root", "http://localhost:8080/root/321");
     }
 
     @Test
     public void testExists() throws Exception {
-        Sardine sardine = service.client();
+        Sardine sardine = service.sardine();
         assert !sardine.exists("http://localhost:8080/root");
         sardine.put("http://localhost:8080/root/foo", "foo".getBytes());
         assert sardine.exists("http://localhost:8080/root");
@@ -214,76 +215,76 @@ public class TestWebdavServiceTest {
 
     @Test(expected = NotImplementedException.class)
     public void testLock() throws Exception {
-        service.client().lock("http://localhost:8080/root");
+        service.sardine().lock("http://localhost:8080/root");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testRefreshLock() throws Exception {
-        service.client().refreshLock("http://localhost:8080/root", "123", "123");
+        service.sardine().refreshLock("http://localhost:8080/root", "123", "123");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testUnlock() throws Exception {
-        service.client().unlock("http://localhost:8080/root", "123");
+        service.sardine().unlock("http://localhost:8080/root", "123");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testAcl() throws Exception {
-        service.client().getAcl("http://localhost:8080/root");
+        service.sardine().getAcl("http://localhost:8080/root");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testQuota() throws Exception {
-        service.client().getQuota("http://localhost:8080/root");
+        service.sardine().getQuota("http://localhost:8080/root");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testSetAcl() throws Exception {
-        service.client().setAcl("http://localhost:8080/root", Collections.<DavAce>emptyList());
+        service.sardine().setAcl("http://localhost:8080/root", Collections.<DavAce>emptyList());
     }
 
     @Test(expected = NotImplementedException.class)
     public void testGetPrincipals() throws Exception {
-        service.client().getPrincipals("http://localhost:8080/root");
+        service.sardine().getPrincipals("http://localhost:8080/root");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testGetPrincipalCollectionSet() throws Exception {
-        service.client().getPrincipalCollectionSet("http://localhost:8080/root");
+        service.sardine().getPrincipalCollectionSet("http://localhost:8080/root");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testEnablePreemptiveAuthentication() throws Exception {
-        service.client().enablePreemptiveAuthentication("http://localhost:8080/root");
+        service.sardine().enablePreemptiveAuthentication("http://localhost:8080/root");
     }
 
     @Test(expected = NotImplementedException.class)
     public void testEnablePreemptiveAuthentication2() throws Exception {
-        service.client().enablePreemptiveAuthentication(new URL("http://localhost:8080/root"));
+        service.sardine().enablePreemptiveAuthentication(new URL("http://localhost:8080/root"));
     }
 
     @Test(expected = NotImplementedException.class)
     public void testEnablePreemptiveAuthentication3() throws Exception {
-        service.client().enablePreemptiveAuthentication("localhost", 800, 900);
+        service.sardine().enablePreemptiveAuthentication("localhost", 800, 900);
     }
 
     @Test(expected = NotImplementedException.class)
     public void testDisablePreemptiveAuthentication() throws Exception {
-        service.client().disablePreemptiveAuthentication();
+        service.sardine().disablePreemptiveAuthentication();
     }
 
     @Test(expected = NotImplementedException.class)
     public void testShutdown() throws Exception {
-        service.client().shutdown();
+        service.sardine().shutdown();
     }
 
     @Test(expected = NotImplementedException.class)
     public void testEnableCompression() throws Exception {
-        service.client().enableCompression();
+        service.sardine().enableCompression();
     }
 
     @Test(expected = NotImplementedException.class)
     public void testDisableCompression() throws Exception {
-        service.client().disableCompression();
+        service.sardine().disableCompression();
     }
 }

@@ -1,62 +1,37 @@
 package org.elasticsearch.webdav;
 
-import com.github.sardine.Sardine;
-import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.blobstore.BlobContainer;
 import org.elasticsearch.common.blobstore.BlobPath;
 import org.elasticsearch.common.blobstore.BlobStore;
 import org.elasticsearch.common.blobstore.BlobStoreException;
 import org.elasticsearch.common.component.AbstractComponent;
 import org.elasticsearch.common.settings.Settings;
-import org.elasticsearch.common.unit.ByteSizeUnit;
-import org.elasticsearch.common.unit.ByteSizeValue;
-import org.elasticsearch.threadpool.ThreadPool;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.concurrent.Executor;
 
 public class WebdavBlobStore extends AbstractComponent implements BlobStore {
 
-    private final ThreadPool threadPool;
-    private final int bufferSizeInBytes;
-    private final int numberOfRetries;
-
     private final URL path;
 
-    private final Sardine sardine;
+    private final WebdavClient webdavClient;
 
-    public WebdavBlobStore(Settings settings, ThreadPool threadPool, Sardine sardine, URL path) {
+    public WebdavBlobStore(Settings settings, WebdavClient webdavClient, URL path) {
         super(settings);
         this.path = path;
-        this.threadPool = threadPool;
-        this.sardine = sardine;
-        this.bufferSizeInBytes = (int) settings.getAsBytesSize("buffer_size", new ByteSizeValue(100, ByteSizeUnit.KB)).bytes();
-        this.numberOfRetries = settings.getAsInt("max_retries", 3);
+        this.webdavClient = webdavClient;
     }
 
     public URL path() {
         return path;
     }
 
-    public Executor executor() {
-        return threadPool.executor(ThreadPool.Names.SNAPSHOT);
-    }
-
-    public int bufferSizeInBytes(){
-        return bufferSizeInBytes;
-    }
-
-    public int numberOfRetries(){
-        return numberOfRetries;
-    }
-
     @Override
     public BlobContainer blobContainer(BlobPath blobPath) {
         try {
             URL url = buildPath(blobPath);
-            return new WebdavBlobContainer(this, blobPath, url, sardine);
+            return new WebdavBlobContainer(this, blobPath, url, webdavClient);
         } catch (MalformedURLException ex) {
             throw new BlobStoreException("malformed URL " + path, ex);
         }
@@ -66,7 +41,7 @@ public class WebdavBlobStore extends AbstractComponent implements BlobStore {
     public void delete(BlobPath blobPath) {
         try {
             URL url = buildPath(blobPath);
-            sardine.delete(url.toString());
+            webdavClient.delete(url);
         } catch (MalformedURLException ex) {
             throw new BlobStoreException("malformed URL " + path, ex);
         } catch (IOException ex) {
@@ -77,11 +52,6 @@ public class WebdavBlobStore extends AbstractComponent implements BlobStore {
 
     @Override
     public void close() {
-        try {
-            sardine.shutdown();
-        } catch (IOException e) {
-            throw new ElasticsearchException("error close sardine", e);
-        }
     }
 
     /**
