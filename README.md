@@ -59,7 +59,9 @@ curl -XPUT 'http://localhost:9200/_snapshot/test' -d '{
         "port": "8080",
         "base_path": "webdav",
         "username": "webdav",
-        "password": "password"
+        "password": "password",
+        "max_snapshot_bytes_per_sec": "100mb",
+        "max_restore_bytes_per_sec": "100mb"
     }
 }'
 # wait for
