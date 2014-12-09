@@ -5,28 +5,8 @@ import org.elasticsearch.common.collect.ImmutableMap;
 import org.junit.Test;
 
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 
 public class PropFindResponseParserTest {
-
-    @Test
-    public void testLoad() throws Exception {
-        long start = System.currentTimeMillis();
-        URL url = new URL("http://localhost:8080/webdav/indices/online/0/__6a");
-        final HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        final InputStream inputStream = con.getInputStream();
-
-        byte[] buffer = new byte[65536];
-        // noinspection StatementWithEmptyBody
-        while (inputStream.read(buffer) != -1) ;
-        // noinspection StatementWithEmptyBody
-//        while (inputStream.read() != -1);
-
-        inputStream.close();
-        long end = System.currentTimeMillis();
-        System.out.println("done at " + (end - start) + "ms");
-    }
 
     @Test
     public void test() throws Exception {
