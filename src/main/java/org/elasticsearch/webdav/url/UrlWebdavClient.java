@@ -1,6 +1,5 @@
 package org.elasticsearch.webdav.url;
 
-import org.apache.http.HttpStatus;
 import org.elasticsearch.common.Base64;
 import org.elasticsearch.common.blobstore.BlobMetaData;
 import org.elasticsearch.common.collect.ImmutableMap;
@@ -184,7 +183,7 @@ public class UrlWebdavClient implements WebdavClient {
                     int statusCode = con.getResponseCode();
                     String responseMessage = con.getResponseMessage();
                     con.disconnect();
-                    if (statusCode < HttpStatus.SC_OK || statusCode >= HttpStatus.SC_MULTIPLE_CHOICES) {
+                    if (statusCode < SC_OK || statusCode >= SC_MULTIPLE_CHOICES) {
                         throw new IOException("status code: " + statusCode + " message: " + responseMessage);
                     }
                 }
