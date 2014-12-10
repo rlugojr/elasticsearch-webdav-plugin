@@ -1,7 +1,5 @@
 package org.elasticsearch.webdav;
 
-import com.github.sardine.Sardine;
-import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.blobstore.BlobPath;
 import org.elasticsearch.common.blobstore.BlobStore;
 import org.elasticsearch.common.blobstore.BlobStoreException;
@@ -21,19 +19,17 @@ public class WebdavBlobStore extends AbstractComponent implements BlobStore {
 
     private final ThreadPool threadPool;
     private final int bufferSizeInBytes;
-    private final int numberOfRetries;
 
     private final URL path;
 
-    private final Sardine sardine;
+    private final WebdavClient webdavClient;
 
-    public WebdavBlobStore(Settings settings, ThreadPool threadPool, Sardine sardine, URL path) {
+    public WebdavBlobStore(Settings settings, ThreadPool threadPool, WebdavClient webdavClient, URL path) {
         super(settings);
         this.path = path;
         this.threadPool = threadPool;
-        this.sardine = sardine;
+        this.webdavClient = webdavClient;
         this.bufferSizeInBytes = (int) settings.getAsBytesSize("buffer_size", new ByteSizeValue(100, ByteSizeUnit.KB)).bytes();
-        this.numberOfRetries = settings.getAsInt("max_retries", 3);
     }
 
     public URL path() {
@@ -44,12 +40,8 @@ public class WebdavBlobStore extends AbstractComponent implements BlobStore {
         return threadPool.executor(ThreadPool.Names.SNAPSHOT_DATA);
     }
 
-    public int bufferSizeInBytes(){
+    public int bufferSizeInBytes() {
         return bufferSizeInBytes;
-    }
-
-    public int numberOfRetries(){
-        return numberOfRetries;
     }
 
     /**
@@ -58,7 +50,7 @@ public class WebdavBlobStore extends AbstractComponent implements BlobStore {
     @Override
     public ImmutableBlobContainer immutableBlobContainer(BlobPath path) {
         try {
-            return new WebdavImmutableBlobContainer(this, path, buildPath(path), sardine);
+            return new WebdavImmutableBlobContainer(this, path, buildPath(path), webdavClient);
         } catch (MalformedURLException ex) {
             throw new BlobStoreException("malformed URL " + path, ex);
         }
@@ -69,7 +61,11 @@ public class WebdavBlobStore extends AbstractComponent implements BlobStore {
      */
     @Override
     public void delete(BlobPath path) {
-        throw new UnsupportedOperationException("URL repository is read only");
+        try {
+            webdavClient.delete(buildPath(path));
+        } catch (IOException e) {
+            throw new BlobStoreException("IO exception", e);
+        }
     }
 
     /**
@@ -77,11 +73,6 @@ public class WebdavBlobStore extends AbstractComponent implements BlobStore {
      */
     @Override
     public void close() {
-        try {
-            sardine.shutdown();
-        } catch (IOException e) {
-            throw new ElasticsearchException("error close sardine", e);
-        }
     }
 
     /**

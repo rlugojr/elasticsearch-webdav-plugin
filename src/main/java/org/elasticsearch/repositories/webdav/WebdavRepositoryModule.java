@@ -5,8 +5,8 @@ import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.index.snapshots.IndexShardRepository;
 import org.elasticsearch.index.snapshots.blobstore.BlobStoreIndexShardRepository;
 import org.elasticsearch.repositories.Repository;
-import org.elasticsearch.webdav.InternalWebdavService;
 import org.elasticsearch.webdav.WebdavService;
+import org.elasticsearch.webdav.url.UrlWebdavService;
 
 public class WebdavRepositoryModule extends AbstractModule {
 
@@ -25,6 +25,6 @@ public class WebdavRepositoryModule extends AbstractModule {
     }
 
     protected Class<? extends WebdavService> getWebdavServiceClass() {
-        return settings.getAsClass(WEBDAV_SERVICE_TYPE_KEY, InternalWebdavService.class);
+        return settings.getAsClass(WEBDAV_SERVICE_TYPE_KEY, UrlWebdavService.class);
     }
 }

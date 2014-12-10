@@ -1,20 +1,15 @@
 package org.elasticsearch.webdav;
 
-import com.github.sardine.DavResource;
-import com.github.sardine.Sardine;
 import org.apache.lucene.util.IOUtils;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.common.blobstore.BlobMetaData;
 import org.elasticsearch.common.blobstore.BlobPath;
 import org.elasticsearch.common.blobstore.support.AbstractBlobContainer;
-import org.elasticsearch.common.blobstore.support.PlainBlobMetaData;
 import org.elasticsearch.common.collect.ImmutableMap;
-import org.elasticsearch.common.collect.MapBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-import java.util.List;
 
 public abstract class AbstractWebdavBlobContainer extends AbstractBlobContainer {
 
@@ -22,13 +17,13 @@ public abstract class AbstractWebdavBlobContainer extends AbstractBlobContainer 
 
     protected final URL path;
 
-    protected final Sardine sardine;
+    protected final WebdavClient webdavClient;
 
-    protected AbstractWebdavBlobContainer(WebdavBlobStore blobStore, BlobPath blobPath, URL path, Sardine sardine) {
+    protected AbstractWebdavBlobContainer(WebdavBlobStore blobStore, BlobPath blobPath, URL path, WebdavClient webdavClient) {
         super(blobPath);
         this.blobStore = blobStore;
         this.path = path;
-        this.sardine = sardine;
+        this.webdavClient = webdavClient;
     }
 
     /**
@@ -37,9 +32,9 @@ public abstract class AbstractWebdavBlobContainer extends AbstractBlobContainer 
     @Override
     public boolean blobExists(String blobName) {
         try {
-            return sardine.exists(new URL(path, blobName).toString());
+            return webdavClient.exists(new URL(path, blobName));
         } catch (IOException e) {
-            throw new ElasticsearchException("error test blob ["+blobName+"]", e);
+            throw new ElasticsearchException("error test blob [" + blobName + "]", e);
         }
     }
 
@@ -48,8 +43,7 @@ public abstract class AbstractWebdavBlobContainer extends AbstractBlobContainer 
      */
     @Override
     public boolean deleteBlob(String blobName) throws IOException {
-        sardine.delete(new URL(path, blobName).toString());
-        return true;
+        return webdavClient.delete(new URL(path, blobName));
     }
 
     /**
@@ -57,16 +51,7 @@ public abstract class AbstractWebdavBlobContainer extends AbstractBlobContainer 
      */
     @Override
     public ImmutableMap<String, BlobMetaData> listBlobs() throws IOException {
-        List<DavResource> resourceList = sardine.list(path.toString());
-
-        // using MapBuilder and not ImmutableMap.Builder as it seems like File#listFiles might return duplicate files!
-        MapBuilder<String, BlobMetaData> builder = MapBuilder.newMapBuilder();
-        for (DavResource file : resourceList) {
-            if (!file.isDirectory()) {
-                builder.put(file.getName(), new PlainBlobMetaData(file.getName(), file.getContentLength()));
-            }
-        }
-        return builder.immutableMap();
+        return webdavClient.listBlobs(path);
     }
 
     @Override
@@ -77,7 +62,7 @@ public abstract class AbstractWebdavBlobContainer extends AbstractBlobContainer 
                 byte[] buffer = new byte[blobStore.bufferSizeInBytes()];
                 InputStream is = null;
                 try {
-                    is = sardine.get(new URL(path, blobName).toString());
+                    is = webdavClient.openInput(new URL(path, blobName));
                     int bytesRead;
                     while ((bytesRead = is.read(buffer)) != -1) {
                         listener.onPartial(buffer, 0, bytesRead);

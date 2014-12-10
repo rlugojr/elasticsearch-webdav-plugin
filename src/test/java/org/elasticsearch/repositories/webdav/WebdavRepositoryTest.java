@@ -13,7 +13,6 @@ import org.elasticsearch.snapshots.SnapshotState;
 import org.elasticsearch.test.ElasticsearchIntegrationTest;
 import org.elasticsearch.test.ElasticsearchIntegrationTest.ClusterScope;
 import org.elasticsearch.webdav.TestWebdavService;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,11 +49,6 @@ public class WebdavRepositoryTest extends ElasticsearchIntegrationTest {
 
     @Before
     public final void wipeBefore() {
-        wipeRepositories();
-    }
-
-    @After
-    public final void wipeAfter() {
         wipeRepositories();
     }
 

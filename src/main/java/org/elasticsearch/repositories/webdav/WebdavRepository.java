@@ -1,6 +1,5 @@
 package org.elasticsearch.repositories.webdav;
 
-import com.github.sardine.Sardine;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.blobstore.BlobPath;
 import org.elasticsearch.common.blobstore.BlobStore;
@@ -13,9 +12,10 @@ import org.elasticsearch.repositories.RepositorySettings;
 import org.elasticsearch.repositories.blobstore.BlobStoreRepository;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.webdav.WebdavBlobStore;
+import org.elasticsearch.webdav.WebdavClient;
 import org.elasticsearch.webdav.WebdavService;
 
-import java.net.MalformedURLException;
+import java.io.IOException;
 import java.net.URL;
 
 public class WebdavRepository extends BlobStoreRepository {
@@ -36,17 +36,17 @@ public class WebdavRepository extends BlobStoreRepository {
      * @param indexShardRepository an instance of IndexShardRepository
      */
     @Inject
-    protected WebdavRepository(String name, RepositorySettings repositorySettings, IndexShardRepository indexShardRepository, ThreadPool threadPool, WebdavService webdavService) throws MalformedURLException {
+    protected WebdavRepository(String name, RepositorySettings repositorySettings, IndexShardRepository indexShardRepository, ThreadPool threadPool, WebdavService webdavService) throws IOException {
         super(name, repositorySettings, indexShardRepository);
 
         boolean https = repositorySettings.settings().getAsBoolean("https", componentSettings.getAsBoolean("https", false));
 
         String host = repositorySettings.settings().get("host", componentSettings.get("host"));
-        if(host == null || host.isEmpty()){
+        if (host == null || host.isEmpty()) {
             throw new RepositoryException(name, "No host defined for webdav repository");
         }
         Integer port = repositorySettings.settings().getAsInt("port", componentSettings.getAsInt("port", 80));
-        if(port == null){
+        if (port == null) {
             throw new RepositoryException(name, "No port defined for webdav repository");
         }
 
@@ -55,7 +55,7 @@ public class WebdavRepository extends BlobStoreRepository {
         String basePath = repositorySettings.settings().get("base_path", null);
         if (Strings.hasLength(basePath)) {
             BlobPath path = new BlobPath();
-            for(String elem : Strings.splitStringToArray(basePath, '/')) {
+            for (String elem : Strings.splitStringToArray(basePath, '/')) {
                 path = path.add(elem);
             }
             this.basePath = path;
@@ -65,22 +65,22 @@ public class WebdavRepository extends BlobStoreRepository {
 
         logger.debug("host [{}], port [{}], base path [{}], chunk size [{}]", host, port, basePath, chunkSize);
 
-        URL path = new URL(https?"https": "http", host, port, "/" + this.basePath.buildAsString("/"));
+        URL path = new URL(https ? "https" : "http", host, port, "/" + this.basePath.buildAsString("/"));
 
         String username = repositorySettings.settings().get("username", componentSettings.get("username"));
         String password = repositorySettings.settings().get("password", componentSettings.get("password"));
 
-        Sardine sardine;
-        if(username != null && !username.isEmpty()){
-            sardine = webdavService.client(username, password);
-        }else {
-            sardine = webdavService.client();
+        WebdavClient client;
+        if (username != null && !username.isEmpty()) {
+            client = webdavService.client(username, password);
+        } else {
+            client = webdavService.client();
         }
 
-        blobStore = new WebdavBlobStore(settings, threadPool, sardine, path);
+        blobStore = new WebdavBlobStore(settings, threadPool, client, path);
     }
 
-    protected ByteSizeValue chunkSize(){
+    protected ByteSizeValue chunkSize() {
         return chunkSize;
     }
 
