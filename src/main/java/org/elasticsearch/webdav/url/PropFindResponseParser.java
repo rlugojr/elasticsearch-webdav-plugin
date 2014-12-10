@@ -77,13 +77,11 @@ public class PropFindResponseParser {
                             name = null;
                         } else {
                             name = buffer.toString();
-                            System.out.println("name: " + buffer.toString());
                             buffer.setLength(0);
                         }
                     }
                     if (localName.equals("getcontentlength")) {
                         length = Long.valueOf(buffer.toString());
-                        System.out.println("length: " + buffer.toString());
                         buffer.setLength(0);
                     }
                 }

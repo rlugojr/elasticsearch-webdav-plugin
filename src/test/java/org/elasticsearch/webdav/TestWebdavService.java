@@ -56,10 +56,6 @@ public class TestWebdavService extends AbstractLifecycleComponent<WebdavService>
 
         private final DavEntry rootEntry = new DavEntry();
 
-        public WebdavClientMock() {
-            System.out.println(this);
-        }
-
         @Override
         public boolean exists(URL url) throws IOException {
             return getEntry(url) != null;
